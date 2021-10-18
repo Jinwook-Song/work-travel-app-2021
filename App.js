@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,12 +8,19 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "./colors";
+
+const STORAGE_KEY = "@toDos";
 
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState({});
+  useEffect(() => {
+    loadToDos();
+  }, []);
+
   function travel() {
     setWorking(false);
   }
@@ -23,19 +30,33 @@ export default function App() {
   function onChangeText(payload) {
     setText(payload);
   }
-  function addToDo() {
+  async function saveToDos(toSave) {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  }
+  async function loadToDos() {
+    try {
+      const getString = await AsyncStorage.getItem(STORAGE_KEY);
+      setToDos(JSON.parse(getString));
+    } catch (error) {
+      setToDos({});
+      console.log(error);
+    }
+  }
+  async function addToDo() {
     if (text === "") {
       return;
     }
     const newToDos = {
       ...toDos,
-      [Date.now()]: { text, work: working },
+      [Date.now()]: { text, working },
     };
     setToDos(newToDos);
+    await saveToDos(newToDos);
     setText("");
   }
   return (
     <View style={styles.container}>
+      <StatusBar style="auto" />
       <View style={styles.header}>
         <TouchableOpacity onPress={work}>
           <Text
@@ -52,23 +73,23 @@ export default function App() {
           </Text>
         </TouchableOpacity>
       </View>
-      <View>
-        <TextInput
-          onSubmitEditing={addToDo}
-          autoCapitalize="sentences"
-          returnKeyType="done"
-          onChangeText={onChangeText}
-          value={text}
-          placeholder={working ? "Write a To Do." : "Where do you want to go?"}
-          style={styles.input}
-        />
-      </View>
+      <TextInput
+        onSubmitEditing={addToDo}
+        autoCapitalize="sentences"
+        returnKeyType="done"
+        onChangeText={onChangeText}
+        value={text}
+        placeholder={working ? "Write a To Do." : "Where do you want to go?"}
+        style={styles.input}
+      />
       <ScrollView>
-        {Object.keys(toDos).map((key) => (
-          <View key={key} style={styles.toDo}>
-            <Text style={styles.toDoText}>{toDos[key].text}</Text>
-          </View>
-        ))}
+        {Object.keys(toDos).map((key) =>
+          toDos[key].working === working ? (
+            <View style={styles.toDo} key={key}>
+              <Text style={styles.toDoText}>{toDos[key].text}</Text>
+            </View>
+          ) : null
+        )}
       </ScrollView>
     </View>
   );
