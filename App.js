@@ -12,6 +12,7 @@ import { theme } from "./colors";
 export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
   function travel() {
     setWorking(false);
   }
@@ -20,6 +21,17 @@ export default function App() {
   }
   function onChangeText(payload) {
     setText(payload);
+  }
+  function addToDo() {
+    if (text === "") {
+      return;
+    }
+    const newToDos = {
+      ...toDos,
+      [Date.now]: { text, work: working },
+    };
+    setToDos(newToDos);
+    setText("");
   }
   return (
     <View style={styles.container}>
@@ -41,7 +53,9 @@ export default function App() {
       </View>
       <View>
         <TextInput
+          onSubmitEditing={addToDo}
           autoCapitalize="sentences"
+          returnKeyType="done"
           onChangeText={onChangeText}
           value={text}
           placeholder={working ? "Write a To Do." : "Where do you want to go?"}
