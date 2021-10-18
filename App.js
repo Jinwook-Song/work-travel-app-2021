@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Fontisto } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "./colors";
 
@@ -35,10 +37,9 @@ export default function App() {
   }
   async function loadToDos() {
     try {
-      const getString = await AsyncStorage.getItem(STORAGE_KEY);
-      setToDos(JSON.parse(getString));
+      const jsonPayload = await AsyncStorage.getItem(STORAGE_KEY);
+      return jsonPayload != null ? setToDos(JSON.parse(jsonPayload)) : null;
     } catch (error) {
-      setToDos({});
       console.log(error);
     }
   }
@@ -53,6 +54,21 @@ export default function App() {
     setToDos(newToDos);
     await saveToDos(newToDos);
     setText("");
+  }
+  async function deleteTodo(key) {
+    Alert.alert("Delete To Do", "Are you sure?", [
+      { text: "Cancel" },
+      {
+        text: "I'm sure",
+        style: "destructive",
+        onPress: () => {
+          const newToDos = { ...toDos };
+          delete newToDos[key];
+          setToDos(newToDos);
+          saveToDos(newToDos);
+        },
+      },
+    ]);
   }
   return (
     <View style={styles.container}>
@@ -87,6 +103,9 @@ export default function App() {
           toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
               <Text style={styles.toDoText}>{toDos[key].text}</Text>
+              <TouchableOpacity onPress={() => deleteTodo(key)}>
+                <Fontisto name="trash" size={18} color={theme.delete} />
+              </TouchableOpacity>
             </View>
           ) : null
         )}
@@ -124,6 +143,9 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   toDoText: {
     color: "white",
