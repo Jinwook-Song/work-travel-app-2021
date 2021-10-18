@@ -66,6 +66,7 @@ export default function App() {
         text: "I'm sure",
         style: "destructive",
         onPress: () => {
+          // Never mutate state
           const newToDos = { ...toDos };
           delete newToDos[key];
           setToDos(newToDos);
