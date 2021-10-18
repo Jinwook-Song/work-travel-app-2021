@@ -33,7 +33,11 @@ export default function App() {
     setText(payload);
   }
   async function saveToDos(toSave) {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (error) {
+      console.log(error);
+    }
   }
   async function loadToDos() {
     try {
@@ -48,8 +52,8 @@ export default function App() {
       return;
     }
     const newToDos = {
-      ...toDos,
       [Date.now()]: { text, working },
+      ...toDos,
     };
     setToDos(newToDos);
     await saveToDos(newToDos);
@@ -57,7 +61,7 @@ export default function App() {
   }
   async function deleteTodo(key) {
     Alert.alert("Delete To Do", "Are you sure?", [
-      { text: "Cancel" },
+      { text: "Cancel", style: "cancel" },
       {
         text: "I'm sure",
         style: "destructive",
